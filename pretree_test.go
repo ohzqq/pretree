@@ -143,7 +143,7 @@ func Test_Build(t *testing.T) {
 	for _, v := range data {
 		sourceRule := v[1]
 		want := v[2]
-		got := SetPathValuesFromMap(sourceRule, vars)
+		got := SetPathValues(sourceRule, vars)
 		if got != want {
 			t.Errorf("got %v path, wanted %v\n", got, want)
 		}

@@ -13,9 +13,7 @@
 package pretree
 
 import (
-	"errors"
 	"path/filepath"
-	"slices"
 	"strings"
 )
 
@@ -203,25 +201,7 @@ func (t *Tree) match(urlPath string) (bool, *Tree, map[string]string) {
 	}
 }
 
-func SetPathValuesFromSlice(rule string, vars ...string) (string, error) {
-	pv := ParsePath(rule)
-	var wc []int
-	for i, p := range pv {
-		if IsVariable(p) {
-			wc = append(wc, i)
-		}
-	}
-	if len(wc) != len(vars) {
-		return "", errors.New("not enough path values for rule")
-	}
-	for i, v := range vars {
-		pv[wc[i]] = v
-	}
-	segs := slices.Insert(pv, 0, "/")
-	return filepath.Join(segs...), nil
-}
-
-func SetPathValuesFromMap(rule string, vars map[string]string) string {
+func SetPathValues(rule string, vars map[string]string) string {
 	pv := ParsePath(rule)
 
 	segs := []string{"/"}
