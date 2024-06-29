@@ -111,6 +111,7 @@ func (t *Tree) Name() string {
 // 获取当前节点的变量名
 //
 // Get the variable name of the current node
+//
 //	:id => id
 func (t *Tree) VarName() string {
 	return strings.TrimPrefix(t.name, ":")
@@ -187,12 +188,12 @@ func (t *Tree) match(urlPath string) (bool, *Tree, map[string]string) {
 	}
 }
 
-func parsePath(path string) []string {
+func ParsePath(path string) []string {
 	path = formatRule(path)
 	return strings.Split(path, "/")
 }
 
-func formatRule(rule string) string {
+func FormatRule(rule string) string {
 	rule = strings.ReplaceAll(rule, "{", ":")
 	rule = strings.ReplaceAll(rule, "}", "")
 	rule = strings.TrimPrefix(rule, "/")
@@ -200,6 +201,6 @@ func formatRule(rule string) string {
 	return rule
 }
 
-func isVariable(s string) bool {
+func IsVariable(s string) bool {
 	return strings.HasPrefix(s, ":")
 }
