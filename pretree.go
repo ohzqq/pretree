@@ -13,6 +13,9 @@
 package pretree
 
 import (
+	"errors"
+	"path/filepath"
+	"slices"
 	"strings"
 )
 
@@ -68,6 +71,18 @@ func (p *PreTree) Query(method, urlPath string) (isExist bool, rule string, vars
 	}
 }
 
+// PathValues is a convenience method for getting the variables from a URL,
+// returning false and an empty map if the rule isn't valid.
+func (p *PreTree) PathValues(urlPath string) (isExist bool, vars map[string]string) {
+	for _, t := range p.treeGroup {
+		isExist, _, vars := t.match(urlPath)
+		if isExist {
+			return true, vars
+		}
+	}
+	return false, map[string]string{}
+}
+
 // 前缀树数据结构
 //
 // Prefix tree data structure
@@ -119,7 +134,7 @@ func (t *Tree) VarName() string {
 
 func (t *Tree) insert(urlRule string) {
 	current := t
-	list := parsePath(urlRule)
+	list := ParsePath(urlRule)
 	for _, word := range list {
 		isExist := false
 		// 如果已经存在路径，继续匹配子节点
@@ -138,7 +153,7 @@ func (t *Tree) insert(urlRule string) {
 		node := newTree()
 		node.name = word
 		// 记录本路径是否变量
-		if isVariable(word) {
+		if IsVariable(word) {
 			node.isVariable = true
 		}
 		current.appendChild(node)
@@ -152,7 +167,7 @@ func (t *Tree) match(urlPath string) (bool, *Tree, map[string]string) {
 	// vars 用于存储路由变量数据
 	vars := make(map[string]string)
 	current := t
-	list := parsePath(urlPath)
+	list := ParsePath(urlPath)
 	for index, word := range list {
 		isExist := false
 		hasVar := false
@@ -188,8 +203,43 @@ func (t *Tree) match(urlPath string) (bool, *Tree, map[string]string) {
 	}
 }
 
+func SetPathValuesFromSlice(rule string, vars ...string) (string, error) {
+	pv := ParsePath(rule)
+	var wc []int
+	for i, p := range pv {
+		if IsVariable(p) {
+			wc = append(wc, i)
+		}
+	}
+	if len(wc) != len(vars) {
+		return "", errors.New("not enough path values for rule")
+	}
+	for i, v := range vars {
+		pv[wc[i]] = v
+	}
+	segs := slices.Insert(pv, 0, "/")
+	return filepath.Join(segs...), nil
+}
+
+func SetPathValuesFromMap(rule string, vars map[string]string) string {
+	pv := ParsePath(rule)
+
+	segs := []string{"/"}
+	for _, p := range pv {
+		if IsVariable(p) {
+			k := strings.TrimPrefix(p, ":")
+			if v, ok := vars[k]; ok {
+				p = v
+			}
+		}
+		segs = append(segs, p)
+	}
+
+	return filepath.Join(segs...)
+}
+
 func ParsePath(path string) []string {
-	path = formatRule(path)
+	path = FormatRule(path)
 	return strings.Split(path, "/")
 }
 
